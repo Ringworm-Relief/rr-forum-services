@@ -14,7 +14,7 @@ const pool = new Pool ({
     user: 'asherspurr',
     host: 'localhost',
     database: 'ringwormForum',
-    password: ENVFILE,
+    password: 'mbs01864',
     port: 5432,
 })
 
@@ -198,5 +198,13 @@ app.get('/posts/:category/:id', (req, res) => {
     }
 })
 
+app.post('/posts/:category', async (req, res) => {
+    const newPost = req.body;
+
+    try {
+        const client = await pool.connect();
+        const result = await client.query('SELECT attributes FROM attributes WHERE post_id ')
+    }
+})
 
 module.exports = { pool };
