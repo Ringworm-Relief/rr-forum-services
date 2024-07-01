@@ -30,59 +30,35 @@ app.use(cors(corsOptions));
 app.get('/threads/:category', async (req, res) => {
     const category = req.params.category; // Get the category from the request parameters
     try {
-        // const { rows } = await db_session.query(`
-        //     SELECT 
-        //         p.id AS post_id,
-        //         p.title AS post_title,
-        //         p.content AS post_content,
-        //         p.user_id AS post_user_id,
-        //         p.created_at AS post_created_at,
-        //         json_agg(json_build_object(
-        //             'thread_id', t.id,
-        //             'content', t.content,
-        //             'user_id', t.user_id,
-        //             'created_at', t.created_at
-        //         )) AS threads
-        //     FROM 
-        //         posts p
-        //     LEFT JOIN 
-        //         threads t ON p.id = t.post_id
-        //     JOIN 
-        //         category c ON c.id = p.category_id
-        //     WHERE 
-        //         c.category = $1
-        //     GROUP BY 
-        //         p.id, p.title, p.content, p.user_id, p.created_at;
-        // `, [category]); // Use the category from the request parameters
-
-
-        const { rows } = await db_session.query(`
+        const rows = await db_session.query(`
             SELECT 
                 p.id AS post_id,
-                p.title AS post_title,
                 p.content AS post_content,
                 p.user_id AS post_user_id,
                 p.created_at AS post_created_at,
-                p.category AS post_category,
                 json_agg(json_build_object(
                     'thread_id', t.id,
-                    'content', t.content,
+                    'title', t.title,
+                    'category', t.category,
+                    'content', t.root_content,
                     'user_id', t.user_id,
                     'created_at', t.created_at
                 )) AS threads
             FROM 
                 posts p
             LEFT JOIN 
-                threads t ON p.id = t.post_id
+                threads t ON p.id = t.id
             WHERE 
-                p.category = $1
+                t.category = $1
+            GROUP BY
+            p.id, p.content, p.user_id, p.created_at
             ;
         `, [category]); // Use the category from the request parameters
 
         res.json(rows);
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Server error');
+        res.status(500).send(err.message);
     }
 });
 
@@ -90,10 +66,11 @@ app.get('/threads/:category', async (req, res) => {
 app.get('/threads/:threadId', async (req, res) => {
     const { threadId } = req.params; // Get the category, postId, and threadId from the request parameters
     try {
-        const { rows } = await db_session.query(`
+        const rows = await db_session.query(`
             SELECT
                 t.id AS thread_id,
                 t.title AS thread_title,
+                t.category AS thread_category,
                 t.user_id AS thread_user_id,
                 t.created_at AS thread_created_at,
                 t.root_content AS thread_root_content,
@@ -109,8 +86,11 @@ app.get('/threads/:threadId', async (req, res) => {
                 posts p ON t.id = p.thread_id
             WHERE
                 t.id = $1
+            GROUP BY
+            t.id, t.title, t.category, t.user_id, t.created_at, t.root_content
             ;
         `, [threadId]); // Use the threadId from the request parameters
+        res.json(rows);
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server error');
@@ -124,21 +104,19 @@ app.get('/posts/:id', async (req, res) => {
         const { rows } = await db_session.query(`
             SELECT 
                 p.id AS post_id,
-                p.title AS post_title,
-                p.content AS post_content,
                 p.user_id AS post_user_id,
                 p.created_at AS post_created_at,
                 p.category AS post_category,
                 json_agg(json_build_object(
                     'thread_id', t.id,
-                    'content', t.content,
+                    'content', t.root_content,
                     'user_id', t.user_id,
                     'created_at', t.created_at
                 )) AS threads
             FROM 
                 posts p
             LEFT JOIN 
-                threads t ON p.id = t.post_id
+                threads t ON p.id = t.thread_id
             WHERE 
                 p.id = $1
             ;
