@@ -1,75 +1,74 @@
+DROP TABLE IF EXISTS posts;
+DROP TABLE IF EXISTS attributes;
+DROP TABLE IF EXISTS threads;
+
 CREATE TABLE posts (
     id SERIAL PRIMARY KEY,
-    category VARCHAR(200),
-    -- attributes JSONB DEFAULT [],
+    category VARCHAR(200)
 );
 
 CREATE TABLE attributes (
-    id SERIAL PRIMARY KEY,
-    post_id INT REFERENCES posts(id),
+    attribute_id SERIAL PRIMARY KEY,
+    category_id
+    category VARCHAR(30),
     title VARCHAR(200),
     content TEXT DEFAULT '',
     user_id INT NOT NULL,
-    created_at TIMESTAMP DEFAULT NOW(),
-    -- threads JSONB DEFAULT [],
-    FOREIGN KEY (post_id) REFERENCES posts(id),
+    created_at TIMESTAMP DEFAULT NOW() 
 );
 
 CREATE TABLE threads (
-    id SERIAL PRIMARY KEY,
-    attribute_id INT REFERENCES atttributes(id),
+    thread_id SERIAL PRIMARY KEY,
+    attribute_id INT REFERENCES attributes(attribute_id),
     content TEXT DEFAULT '',
     user_id INT NOT NULL,
     created_at TIMESTAMP DEFAULT NOW(),
-    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (attribute_id) REFERENCES attributes(attribute_id) ON DELETE CASCADE
 );
 
-SELECT U.UserID, U.Name, Roles.RoleID, Roles.RoleName  
-FROM [dbo].[User] as U 
-INNER JOIN [dbo].UserRole as UR ON UR.UserID=U.UserID 
-INNER JOIN [dbo].RoleMaster as Roles ON Roles.RoleID=UR.RoleMasterID
+
+SELECT *  
+FROM posts
+INNER JOIN attributes ON posts.category=attributes.category
 FOR JSON AUTO
 
-[
-  {
-    "UserID": 1,
-    "Name": "XYZ",
-    "Roles": [
-      {
-        "RoleID": 1,
-        "RoleName": "Admin"
-      }
-    ]
-  },
-  {
-    "UserID": 2,
-    "Name": "PQR",
-    "Roles": [
-      {
-        "RoleID": 1,
-        "RoleName": "Admin"
-      },
-      {
-        "RoleID": 2,
-        "RoleName": "User"
-      }
-    ]
-  },
-  {
-    "UserID": 3,
-    "Name": "ABC",
-    "Roles": [
-      {
-        "RoleID": 1,
-        "RoleName": "Admin"
-      }
-    ]
-  }
-]
+SELECT *
+FROM attributes
+INNER JOIN threads ON attributes.attribute_id=threads.attribute_id
+FOR JSON AUTO
 
-INSERT INTO posts (category) VALUES 
-('Cleaning'),
-('Treatment'),
-('General');
+-- INSERT INTO posts (category) VALUES 
+-- ('Cleaning'),
+-- ('Treatment'),
+-- ('General');
 
-INSERT INTO attributes (post_id, title, content, user_id) VALUES (1, 'title', 1);
+-- Insert sample data into attributes table
+-- INSERT INTO attributes (category, title, content, user_id) VALUES 
+-- ('Cleaning', 'How to clean hardwood floors?', 'Whats the best way to clean and maintain hardwood floors?', 1),
+-- ('Treatment', 'Effective remedies for headaches?', 'What are some quick ways to get rid of a headache?', 2);
+
+-- -- Insert sample data into threads table
+-- INSERT INTO threads (attribute_id, content, user_id) VALUES 
+-- (1, 'I use a mixture of vinegar and water. Works great!', 2),
+-- (1, 'Make sure not to use too much water, it can damage the wood.', 3),
+-- (2, 'I find that drinking water and resting in a dark room helps.', 3),
+-- (2, 'Peppermint oil on the temples works wonders for me.', 4);
+
+-- Select data to verify the structure and relationships
+-- SELECT 
+--     p.id AS post_id,
+--     p.category AS post_category,
+--     a.attribute_id AS attribute_id,
+--     a.title AS attribute_title,
+--     t.thread_id AS thread_id,
+--     t.content AS thread_content
+-- FROM 
+--     posts p
+-- INNER JOIN 
+--     attributes a ON p.id = a.post_id
+-- INNER JOIN 
+--     threads t ON a.attribute_id = t.attribute_id;
+
+
+
+-- INSERT INTO attributes (post_id, title, content, user_id) VALUES (1, 'title', 1);
