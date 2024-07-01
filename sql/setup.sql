@@ -3,36 +3,29 @@ DROP TABLE IF EXISTS threads;
 DROP TABLE IF EXISTS posts;
 DROP TABLE IF EXISTS category;
 
--- Create category table
-CREATE TABLE category (
-    id SERIAL PRIMARY KEY,
-    category VARCHAR(200) NOT NULL
-);
 
 -- Create posts table
 CREATE TABLE posts (
     id SERIAL PRIMARY KEY,
-    category_id INT NOT NULL,
-    title VARCHAR(200) NOT NULL,
+    thread_id INT NOT NULL,
     content TEXT DEFAULT '',
     user_id VARCHAR(50) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (category_id) REFERENCES category(id) ON DELETE CASCADE
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE INDEX category_idx ON posts(category);
+CREATE INDEX user_id_idx ON posts(user_id);
 
 -- Create threads table
 CREATE TABLE threads (
     id SERIAL PRIMARY KEY,
-    post_id INT NOT NULL,
-    content TEXT DEFAULT '',
+    title VARCHAR(200 NOT NULL),
+    -- post_id INT NOT NULL,
+    category VARCHAR(100) NOT NULL,
+    root_content TEXT DEFAULT '',
     user_id VARCHAR(50) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+    FOREIGN KEY (thread_id) REFERENCES posts(thread_id) ON DELETE CASCADE
 );
 
--- Insert predefined categories
-INSERT INTO category (category) VALUES 
-('Cleaning'),
-('Treatment'),
-('General');
-
+CREATE INDEX threads_category_idx ON threads(category);
