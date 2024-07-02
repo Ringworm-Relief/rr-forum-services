@@ -134,7 +134,7 @@ app.get('/posts/:id', async (req, res) => {
 // Route to create a new post
 app.post('/posts/create', async (req, res) => {
     //const { category } = req.params; // Get category from URL parameter
-    const { title, content, user_id, category } = req.body; // Get other required fields from the request body
+    const { title, root_content, user_id, category } = req.body; // Get other required fields from the request body
 
     // Validate the required fields
     if (!category || !title || !user_id) {
@@ -143,18 +143,13 @@ app.post('/posts/create', async (req, res) => {
 
     try {
         // First, get the category_id from the category name
-        const categoryResult = await db_session.query('SELECT id FROM category WHERE category = $1', [category]);
-        if (categoryResult.rows.length === 0) {
-            return res.status(404).json({ message: 'Category not found' });
-        }
-        const category_id = categoryResult.rows[0].id;
-
+        
         // Insert the new post with the retrieved category_id
         const result = await db_session.query(
-            `INSERT INTO posts (category_id, title, content, user_id) 
+            `INSERT INTO threads (category, title, root_content, user_id) 
              VALUES ($1, $2, $3, $4) 
              RETURNING *`,
-            [category_id, title, content, user_id]
+            [category, title, root_content, user_id]
         );
 
         res.status(201).json(result.rows[0]);
