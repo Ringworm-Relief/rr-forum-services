@@ -32,26 +32,27 @@ app.get('/threads/:category', async (req, res) => {
     try {
         const { rows } = await db_session.query(`
             SELECT 
-                p.id AS post_id,
-                p.content AS post_content,
-                p.user_id AS post_user_id,
-                p.created_at AS post_created_at,
+                t.id AS id,
+                t.category AS category,
+                t.title AS title,
+                t.root_content AS root_content,
+                t.user_id AS user_id,
+                t.created_at AS created_at,
                 json_agg(json_build_object(
-                    'thread_id', t.id,
-                    'title', t.title,
-                    'category', t.category,
-                    'content', t.root_content,
-                    'user_id', t.user_id,
-                    'created_at', t.created_at
-                )) AS threads
+                    'id', p.id,
+                    'thread_id', p.thread_id,
+                    'post_content', p.content,
+                    'user_id', p.user_id,
+                    'created_at', p.created_at
+                )) AS posts
             FROM 
-                posts p
+                threads t
             LEFT JOIN 
-                threads t ON p.id = t.id
+                posts p ON t.id = p.id
             WHERE 
                 t.category = $1
             GROUP BY
-            p.id, p.content, p.user_id, p.created_at
+            t.id, t.category, t.title, t.root_content, t.user_id, t.created_at
             ;
         `, [category]); // Use the category from the request parameters
 
@@ -62,7 +63,7 @@ app.get('/threads/:category', async (req, res) => {
     }
 });
 
-// new endpoint for getting a thread
+// new endpoint for getting a thread by id
 app.get('/threads/:threadId', async (req, res) => {
     const { threadId } = req.params; // Get the category, postId, and threadId from the request parameters
     try {
@@ -97,8 +98,8 @@ app.get('/threads/:threadId', async (req, res) => {
     }
 });
 
-// Route to get a single post
-app.get('/posts/:id', async (req, res) => {
+// Route to get a single thread
+app.get('/threads/:id', async (req, res) => {
     const { id } = req.params; // Get the id from the request parameters
     try {
         const { rows } = await db_session.query(`
@@ -106,9 +107,10 @@ app.get('/posts/:id', async (req, res) => {
                 p.id AS post_id,
                 p.user_id AS post_user_id,
                 p.created_at AS post_created_at,
-                p.category AS post_category,
+                p.thread_id AS thread_id,
+                p.content AS post_content,
                 json_agg(json_build_object(
-                    'thread_id', t.id,
+                    'id', t.id,
                     'content', t.root_content,
                     'user_id', t.user_id,
                     'created_at', t.created_at
@@ -116,9 +118,11 @@ app.get('/posts/:id', async (req, res) => {
             FROM 
                 posts p
             LEFT JOIN 
-                threads t ON p.id = t.thread_id
+                threads t ON t.id = p.thread_id
             WHERE 
                 p.id = $1
+            GROUP BY
+            p.id, p.user_id, p.created_at, p.thread_id, p.content
             ;
         `, [id]); // Use the category and id from the request parameters
         if (rows.length === 0) {
