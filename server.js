@@ -30,7 +30,7 @@ app.use(cors(corsOptions));
 app.get('/threads/:category', async (req, res) => {
     const category = req.params.category; // Get the category from the request parameters
     try {
-        const rows = await db_session.query(`
+        const { rows } = await db_session.query(`
             SELECT 
                 p.id AS post_id,
                 p.content AS post_content,
