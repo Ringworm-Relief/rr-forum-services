@@ -106,31 +106,27 @@ app.get('/threads/:category/:id', async (req, res) => {
     }
 });
 
-// Route to get a single thread
-
-
 // Route to create a new post
-app.post('/posts/create', async (req, res) => {
+app.post('/threads/create', async (req, res) => {
     //const { category } = req.params; // Get category from URL parameter
     const { title, root_content, user_id, category } = req.body; // Get other required fields from the request body
-
     // Validate the required fields
-    if (!category || !title || !user_id) {
-        return res.status(400).json({ message: 'Category, title, and user_id are required' });
+    if (!category || !title || !user_id || !root_content) {
+        return res.status(400).json({ message: 'Category, title, content, and user_id are required.' });
     }
 
     try {
         // First, get the category_id from the category name
         
         // Insert the new post with the retrieved category_id
-        const result = await db_session.query(
+        const { rows } = await db_session.query(
             `INSERT INTO threads (category, title, root_content, user_id) 
              VALUES ($1, $2, $3, $4) 
              RETURNING *`,
             [category, title, root_content, user_id]
         );
 
-        res.status(201).json(result.rows[0]);
+        res.status(201).json(rows);
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server error');
