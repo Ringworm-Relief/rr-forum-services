@@ -29,6 +29,7 @@ app.use(cors(corsOptions));
 // Endpoint to fetch posts and their threads by category
 app.get('/threads/:category', async (req, res) => {
     const category = req.params.category; // Get the category from the request parameters
+   
     try {
         const { rows } = await db_session.query(`
             SELECT 
@@ -48,14 +49,16 @@ app.get('/threads/:category', async (req, res) => {
             FROM 
                 threads t
             LEFT JOIN 
-                posts p ON t.id = p.id
+                posts p ON t.id = p.thread_id
             WHERE 
                 t.category = $1
             GROUP BY
             t.id, t.category, t.title, t.root_content, t.user_id, t.created_at
             ;
         `, [category]); // Use the category from the request parameters
-
+        if (rows.length === 0) {
+            return res.status(404).json({ message: 'Category not found' });
+        }
         res.json(rows);
     } catch (err) {
         console.error(err.message);
@@ -64,33 +67,38 @@ app.get('/threads/:category', async (req, res) => {
 });
 
 // new endpoint for getting a thread by id
-app.get('/threads/:threadId', async (req, res) => {
-    const { threadId } = req.params; // Get the category, postId, and threadId from the request parameters
+app.get('/threads/:category/:id', async (req, res) => {
+    const id = req.params.id; // Get the category, postId, and threadId from the request parameters
+    const category = req.params.category;
     try {
-        const rows = await db_session.query(`
+        const { rows } = await db_session.query(`
             SELECT
-                t.id AS thread_id,
-                t.title AS thread_title,
-                t.category AS thread_category,
-                t.user_id AS thread_user_id,
-                t.created_at AS thread_created_at,
-                t.root_content AS thread_root_content,
+                t.id AS id,
+                t.category AS category,
+                t.title AS title,
+                t.root_content AS root_content,
+                t.user_id AS user_id,
+                t.created_at AS created_at,
                 json_agg(json_build_object(
-                    'post_id', p.id,
-                    'content', p.content,
+                    'id', p.id,
+                    'thread_id', p.thread_id,
+                    'post_content', p.content,
                     'user_id', p.user_id,
                     'created_at', p.created_at
-                )) AS thread_posts
-            FROM
+                )) AS posts
+            FROM 
                 threads t
-            JOIN 
+            LEFT JOIN 
                 posts p ON t.id = p.thread_id
-            WHERE
-                t.id = $1
+            WHERE 
+                t.id = $1 AND t.category = $2
             GROUP BY
-            t.id, t.title, t.category, t.user_id, t.created_at, t.root_content
+            t.id, t.category, t.title, t.root_content, t.user_id, t.created_at
             ;
-        `, [threadId]); // Use the threadId from the request parameters
+        `, [id, category]); // Use the threadId from the request parameters
+        if (rows.length === 0) {
+            return res.status(404).json({ message: 'Thread not found' });
+        }
         res.json(rows);
     } catch (err) {
         console.error(err.message);
@@ -99,41 +107,7 @@ app.get('/threads/:threadId', async (req, res) => {
 });
 
 // Route to get a single thread
-app.get('/threads/:id', async (req, res) => {
-    const { id } = req.params; // Get the id from the request parameters
-    try {
-        const { rows } = await db_session.query(`
-            SELECT 
-                p.id AS post_id,
-                p.user_id AS post_user_id,
-                p.created_at AS post_created_at,
-                p.thread_id AS thread_id,
-                p.content AS post_content,
-                json_agg(json_build_object(
-                    'id', t.id,
-                    'content', t.root_content,
-                    'user_id', t.user_id,
-                    'created_at', t.created_at
-                )) AS threads
-            FROM 
-                posts p
-            LEFT JOIN 
-                threads t ON t.id = p.thread_id
-            WHERE 
-                p.id = $1
-            GROUP BY
-            p.id, p.user_id, p.created_at, p.thread_id, p.content
-            ;
-        `, [id]); // Use the category and id from the request parameters
-        if (rows.length === 0) {
-            return res.status(404).json({ message: 'Post not found' });
-        }
-        res.json(rows[0]);
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server error');
-    }
-});
+
 
 // Route to create a new post
 app.post('/posts/create', async (req, res) => {
