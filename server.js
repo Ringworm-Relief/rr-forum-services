@@ -1,22 +1,22 @@
 const express = require('express');
-const { Pool } = require('pg');
+const { Pool } = require('pg'); // Ensure you import Pool from pg module
 const cors = require('cors');
 const app = express();
-app.use(express.json())
+const port = process.env.PORT || 3000;
 
-app.set('port', process.env.PORT || 3000);
+// Load environment variables from .env file
+require('dotenv').config();
 
-app.listen(app.get('port'), () => {
-    console.log('Server on port', app.get('port'));
-})
+// Configure the connection db_session to PostgreSQL using environment variables
+const db_session = new Pool({
+    user: process.env.DB_USER,
+    host: process.env.DB_HOST,
+    database: process.env.DB_NAME,
+    password: process.env.DB_PASSWORD,
+    port: process.env.DB_PORT,
+});
 
-const pool = new Pool ({
-    user: 'asherspurr',
-    host: 'localhost',
-    database: 'ringwormForum',
-    password: ENVFILE,
-    port: 5432,
-})
+app.use(express.json());
 
 const corsOptions = {
   origin: [/^http:\/\/localhost:\d+$/, "https://rr-as.vercel.app/"],
@@ -26,177 +26,169 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-app.locals.posts = [
-    {
-      "id": "1",
-      "type": "cleaning",
-      "attributes": [
-        {
-          "id": "1",
-          "title": "How to clean hardwood floors?",
-          "content": "What's the best way to clean and maintain hardwood floors?",
-          "user_id": "user1",
-          "created_at": "2024-06-10T08:30:00Z",
-          "threads": [
-            {
-              "id": "thread1",
-              "content": "I use a mixture of vinegar and water. Works great!",
-              "user_id": "user2",
-              "created_at": "2024-06-10T09:00:00Z"
-            },
-            {
-              "id": "thread2",
-              "content": "Make sure not to use too much water, it can damage the wood.",
-              "user_id": "user3",
-              "created_at": "2024-06-10T09:15:00Z"
-            }
-          ]
-        },
-        {
-          "id": "2",
-          "title": "Best products for cleaning windows?",
-          "content": "What are some recommended products for streak-free window cleaning?",
-          "user_id": "user4",
-          "created_at": "2024-06-11T10:00:00Z",
-          "threads": [
-            {
-              "id": "thread1",
-              "content": "I always use Windex, never fails!",
-              "user_id": "user5",
-              "created_at": "2024-06-11T10:30:00Z"
-            },
-            {
-              "id": "thread2",
-              "content": "Try using newspaper instead of paper towels for wiping.",
-              "user_id": "user6",
-              "created_at": "2024-06-11T10:45:00Z"
-            }
-          ]
+// Endpoint to fetch posts and their threads by category
+app.get('/threads/:category', async (req, res) => {
+    const category = req.params.category; // Get the category from the request parameters
+   
+    try {
+        const { rows } = await db_session.query(`
+            SELECT 
+                t.id AS id,
+                t.category AS category,
+                t.title AS title,
+                t.root_content AS root_content,
+                t.user_id AS user_id,
+                t.created_at AS created_at,
+                json_agg(json_build_object(
+                    'id', p.id,
+                    'thread_id', p.thread_id,
+                    'post_content', p.content,
+                    'user_id', p.user_id,
+                    'created_at', p.created_at
+                )) AS posts
+            FROM 
+                threads t
+            LEFT JOIN 
+                posts p ON t.id = p.thread_id
+            WHERE 
+                t.category = $1
+            GROUP BY
+            t.id, t.category, t.title, t.root_content, t.user_id, t.created_at
+            ;
+        `, [category]); // Use the category from the request parameters
+        if (rows.length === 0) {
+            return res.status(404).json({ message: 'Category not found' });
         }
-      ]
-    },
-    {
-      "id": "2",
-      "type": "treatment",
-      "attributes": [
-        {
-          "id": "1",
-          "title": "Effective remedies for headaches?",
-          "content": "What are some quick ways to get rid of a headache?",
-          "user_id": "user7",
-          "created_at": "2024-06-12T11:00:00Z",
-          "threads": [
-            {
-              "id": "thread1",
-              "content": "I find that drinking water and resting in a dark room helps.",
-              "user_id": "user8",
-              "created_at": "2024-06-12T11:30:00Z"
-            },
-            {
-              "id": "thread2",
-              "content": "Peppermint oil on the temples works wonders for me.",
-              "user_id": "user9",
-              "created_at": "2024-06-12T11:45:00Z"
-            }
-          ]
-        },
-        {
-          "id": "2",
-          "title": "Home treatments for cold sores?",
-          "content": "Any tips on how to quickly heal cold sores?",
-          "user_id": "user10",
-          "created_at": "2024-06-13T12:00:00Z",
-          "threads": [
-            {
-              "id": "thread1",
-              "content": "Applying aloe vera gel can help soothe and heal faster.",
-              "user_id": "user11",
-              "created_at": "2024-06-13T12:30:00Z"
-            },
-            {
-              "id": "thread2",
-              "content": "Lysine supplements have been effective for me.",
-              "user_id": "user12",
-              "created_at": "2024-06-13T12:45:00Z"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "3",
-      "type": "general",
-      "attributes": [
-        {
-          "id": "1",
-          "title": "Best books to read in 2024?",
-          "content": "Any recommendations for must-read books this year?",
-          "user_id": "user13",
-          "created_at": "2024-06-14T13:00:00Z",
-          "threads": [
-            {
-              "id": "thread1",
-              "content": "I loved 'The Silent Patient' by Alex Michaelides.",
-              "user_id": "user14",
-              "created_at": "2024-06-14T13:30:00Z"
-            },
-            {
-              "id": "thread2",
-              "content": "Try 'Where the Crawdads Sing' by Delia Owens.",
-              "user_id": "user15",
-              "created_at": "2024-06-14T13:45:00Z"
-            }
-          ]
-        },
-        {
-          "id": "2",
-          "title": "Tips for a successful garden?",
-          "content": "What are some tips for maintaining a healthy garden?",
-          "user_id": "user16",
-          "created_at": "2024-06-15T14:00:00Z",
-          "threads": [
-            {
-              "id": "thread1",
-              "content": "Regular watering and weeding are key.",
-              "user_id": "user17",
-              "created_at": "2024-06-15T14:30:00Z"
-            },
-            {
-              "id": "thread2",
-              "content": "Use compost to enrich your soil.",
-              "user_id": "user18",
-              "created_at": "2024-06-15T14:45:00Z"
-            }
-          ]
-        }
-      ]
+        res.json(rows);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send(err.message);
     }
-]
+});
 
-//Get all posts from single category
-app.get('/posts/:category', (req, res) => {
-    const category = req.params.category; //get category from url
+// new endpoint for getting a thread by id
+app.get('/threads/:category/:id', async (req, res) => {
+    const { id, category } = req.params; // Get the category, postId, and threadId from the request parameters
+    try {
+        const { rows } = await db_session.query(`
+            SELECT
+                t.id AS id,
+                t.category AS category,
+                t.title AS title,
+                t.root_content AS root_content,
+                t.user_id AS user_id,
+                t.created_at AS created_at,
+                json_agg(json_build_object(
+                    'id', p.id,
+                    'thread_id', p.thread_id,
+                    'post_content', p.content,
+                    'user_id', p.user_id,
+                    'created_at', p.created_at
+                )) AS posts
+            FROM 
+                threads t
+            LEFT JOIN 
+                posts p ON t.id = p.thread_id
+            WHERE 
+                t.id = $1 AND t.category = $2
+            GROUP BY
+            t.id, t.category, t.title, t.root_content, t.user_id, t.created_at
+            ;
+        `, [id, category]);
+        if (rows.length === 0) {
+            return res.status(404).json({ message: 'Thread not found' });
+        }
+        res.json(rows);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server error');
+    }
+});
 
-    const allPosts = app.locals.posts
-    const gottenPosts = allPosts.filter(post => post.category === category)
+// Route to create a new post
+app.post('/threads/create', async (req, res) => {
+    
+    const { title, root_content, user_id, category } = req.body; // Get other required fields from the request body
+    // Validate the required fields
+    if (!category || !title || !user_id || !root_content) {
+        return res.status(400).json({ message: 'Category, title, content, and user_id are required.' });
+    }
 
+    try {
+        // First, get the category_id from the category name
+        
+        // Insert the new post with the retrieved category_id
+        const { rows } = await db_session.query(
+            `INSERT INTO threads (category, title, root_content, user_id) 
+             VALUES ($1, $2, $3, $4) 
+             RETURNING *`,
+            [category, title, root_content, user_id]
+        );
 
-    response.json({ gottenPosts })
-})
+        res.status(201).json(rows);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server error');
+    }
+});
 
-app.get('/posts/:category/:id', (req, res) => {
-    const category = req.params.category; //get category from url
-    const id = req.params.id; //get id from url
+// Route to create a new post to a thread
+app.post('/threads/:threadId/create', async (req, res) => {
+    const { threadId } = req.params;
+    const { content, user_id } = req.body;
 
-    //Change to use database posts
-    const post = posts.find(post => post.id === id && post.category === category);
+    if (!content || !user_id) {
+        return res.status(400).json({ message: 'Content and user_id are required in the body' });
+    }
+    if(!threadId) {
+        return res.status(400).json({ message: 'ThreadId is a required parameter' });
+    }
 
-    if(post) {
-        res.json(post);
-    } else {
-        res.status(404).send('Post not found');
+    try {
+
+    }
+    catch {
+
     }
 })
+// Route to create a new thread to a post
+app.post('/posts/:category/:postId/threads', async (req, res) => {
+    const { category, postId } = req.params;
+    const { content, user_id } = req.body;
 
+    // Validate the required fields
+    if (!content || !user_id) {
+        return res.status(400).json({ message: 'Content and user_id are required' });
+    }
 
-module.exports = { pool };
+    try {
+        // Check if the category and post exist
+        const categoryResult = await db_session.query('SELECT * FROM category WHERE category = $1', [category]);
+        if (categoryResult.rows.length === 0) {
+            return res.status(404).json({ message: 'Category not found' });
+        }
+
+        const postResult = await db_session.query('SELECT * FROM posts WHERE id = $1 AND category_id = $2', [postId, categoryResult.rows[0].id]);
+        if (postResult.rows.length === 0) {
+            return res.status(404).json({ message: 'Post not found in the specified category' });
+        }
+
+        // Insert the new thread
+        const result = await db_session.query(
+            `INSERT INTO threads (post_id, content, user_id) 
+             VALUES ($1, $2, $3) 
+             RETURNING *`,
+            [postId, content, user_id]
+        );
+
+        res.status(201).json(result.rows[0]);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server error');
+    }
+});
+
+// Start the server
+app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+});
