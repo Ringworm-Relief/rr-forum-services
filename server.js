@@ -7,6 +7,10 @@ const port = process.env.PORT || 3000;
 // Load environment variables from .env file
 require("dotenv").config();
 
+// Update your server file to detect the environment:
+const environment = process.env.NODE_ENV || 'development';
+
+
 // Configure the connection db_session to PostgreSQL using environment variables
 // const db_session = new Pool({
 //     user: process.env.DB_USER,
