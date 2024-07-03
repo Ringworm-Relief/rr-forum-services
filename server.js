@@ -68,8 +68,7 @@ app.get('/threads/:category', async (req, res) => {
 
 // new endpoint for getting a thread by id
 app.get('/threads/:category/:id', async (req, res) => {
-    const id = req.params.id; // Get the category, postId, and threadId from the request parameters
-    const category = req.params.category;
+    const { id, category } = req.params; // Get the category, postId, and threadId from the request parameters
     try {
         const { rows } = await db_session.query(`
             SELECT
@@ -95,7 +94,7 @@ app.get('/threads/:category/:id', async (req, res) => {
             GROUP BY
             t.id, t.category, t.title, t.root_content, t.user_id, t.created_at
             ;
-        `, [id, category]); // Use the threadId from the request parameters
+        `, [id, category]);
         if (rows.length === 0) {
             return res.status(404).json({ message: 'Thread not found' });
         }
@@ -108,7 +107,7 @@ app.get('/threads/:category/:id', async (req, res) => {
 
 // Route to create a new post
 app.post('/threads/create', async (req, res) => {
-    //const { category } = req.params; // Get category from URL parameter
+    
     const { title, root_content, user_id, category } = req.body; // Get other required fields from the request body
     // Validate the required fields
     if (!category || !title || !user_id || !root_content) {
@@ -133,6 +132,25 @@ app.post('/threads/create', async (req, res) => {
     }
 });
 
+// Route to create a new post to a thread
+app.post('/threads/:threadId/create', async (req, res) => {
+    const { threadId } = req.params;
+    const { content, user_id } = req.body;
+
+    if (!content || !user_id) {
+        return res.status(400).json({ message: 'Content and user_id are required in the body' });
+    }
+    if(!threadId) {
+        return res.status(400).json({ message: 'ThreadId is a required parameter' });
+    }
+
+    try {
+
+    }
+    catch {
+
+    }
+})
 // Route to create a new thread to a post
 app.post('/posts/:category/:postId/threads', async (req, res) => {
     const { category, postId } = req.params;
