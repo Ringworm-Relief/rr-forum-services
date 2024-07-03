@@ -1,5 +1,5 @@
-
-
+DROP TABLE IF EXISTS threads;
+DROP TABLE IF EXISTS posts;
 
 -- Create threads table
 CREATE TABLE threads (
