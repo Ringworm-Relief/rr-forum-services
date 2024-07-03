@@ -133,60 +133,61 @@ app.post('/threads/create', async (req, res) => {
 });
 
 // Route to create a new post to a thread
-app.post('/threads/:threadId/create', async (req, res) => {
-    const { threadId } = req.params;
-    const { content, user_id } = req.body;
+// app.post('/threads/:threadId/create', async (req, res) => {
+//     const { threadId } = req.params;
+//     const { content, user_id } = req.body;
 
-    if (!content || !user_id) {
-        return res.status(400).json({ message: 'Content and user_id are required in the body' });
-    }
-    if(!threadId) {
-        return res.status(400).json({ message: 'ThreadId is a required parameter' });
-    }
+//     if (!content || !user_id) {
+//         return res.status(400).json({ message: 'Content and user_id are required in the body' });
+//     }
+//     if(!threadId) {
+//         return res.status(400).json({ message: 'ThreadId is a required parameter' });
+//     }
 
-    try {
+//     try {
 
-    }
-    catch {
+//     }
+//     catch {
 
-    }
-})
-// Route to create a new thread to a post
-app.post('/posts/:category/:postId/threads', async (req, res) => {
-    const { category, postId } = req.params;
-    const { content, user_id } = req.body;
+//     }
+// })
 
-    // Validate the required fields
-    if (!content || !user_id) {
-        return res.status(400).json({ message: 'Content and user_id are required' });
-    }
+// // Route to create a new thread to a post
+// app.post('/posts/:category/:postId/threads', async (req, res) => {
+//     const { category, postId } = req.params;
+//     const { content, user_id } = req.body;
 
-    try {
-        // Check if the category and post exist
-        const categoryResult = await db_session.query('SELECT * FROM category WHERE category = $1', [category]);
-        if (categoryResult.rows.length === 0) {
-            return res.status(404).json({ message: 'Category not found' });
-        }
+//     // Validate the required fields
+//     if (!content || !user_id) {
+//         return res.status(400).json({ message: 'Content and user_id are required' });
+//     }
 
-        const postResult = await db_session.query('SELECT * FROM posts WHERE id = $1 AND category_id = $2', [postId, categoryResult.rows[0].id]);
-        if (postResult.rows.length === 0) {
-            return res.status(404).json({ message: 'Post not found in the specified category' });
-        }
+//     try {
+//         // Check if the category and post exist
+//         const categoryResult = await db_session.query('SELECT * FROM category WHERE category = $1', [category]);
+//         if (categoryResult.rows.length === 0) {
+//             return res.status(404).json({ message: 'Category not found' });
+//         }
 
-        // Insert the new thread
-        const result = await db_session.query(
-            `INSERT INTO threads (post_id, content, user_id) 
-             VALUES ($1, $2, $3) 
-             RETURNING *`,
-            [postId, content, user_id]
-        );
+//         const postResult = await db_session.query('SELECT * FROM posts WHERE id = $1 AND category_id = $2', [postId, categoryResult.rows[0].id]);
+//         if (postResult.rows.length === 0) {
+//             return res.status(404).json({ message: 'Post not found in the specified category' });
+//         }
 
-        res.status(201).json(result.rows[0]);
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server error');
-    }
-});
+//         // Insert the new thread
+//         const result = await db_session.query(
+//             `INSERT INTO threads (post_id, content, user_id) 
+//              VALUES ($1, $2, $3) 
+//              RETURNING *`,
+//             [postId, content, user_id]
+//         );
+
+//         res.status(201).json(result.rows[0]);
+//     } catch (err) {
+//         console.error(err.message);
+//         res.status(500).send('Server error');
+//     }
+// });
 
 // Start the server
 app.listen(port, () => {
