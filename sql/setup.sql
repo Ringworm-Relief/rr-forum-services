@@ -10,7 +10,8 @@ CREATE TABLE threads (
     user_id VARCHAR(50) NOT NULL,
     up_votes INT DEFAULT 0,
     down_votes INT DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unique_category_title_user UNIQUE (category, title, user_id)
 );
 
 -- Create posts table
@@ -27,3 +28,4 @@ CREATE TABLE posts (
 
 CREATE INDEX user_id_idx ON posts(user_id);
 CREATE INDEX threads_category_idx ON threads(category);
+

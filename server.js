@@ -121,7 +121,7 @@ app.get("/threads/:category/:id", async (req, res) => {
 
 // Route to create a new post
 app.post("/threads/create", async (req, res) => {
-  const { title, root_content, user_id, category } = req.body; // Get other required fields from the request body
+  const { title, root_content, user_id, category, up_votes, down_votes } = req.body; // Get other required fields from the request body
   // Validate the required fields
   if (!category || !title || !user_id || !root_content) {
     return res
@@ -132,10 +132,15 @@ app.post("/threads/create", async (req, res) => {
   try {
     // Insert the new post with the retrieved category_id
     const { rows } = await db_session.query(
-      `INSERT INTO threads (category, title, root_content, user_id) 
-             VALUES ($1, $2, $3, $4) 
+      `INSERT INTO threads (category, title, root_content, user_id, up_votes, down_votes) 
+             VALUES ($1, $2, $3, $4, $5, $6) 
+             ON CONFLICT (category, title, user_id) 
+             DO UPDATE SET 
+               root_content = EXCLUDED.root_content,
+               up_votes = EXCLUDED.up_votes,
+               down_votes = EXCLUDED.down_votes
              RETURNING *`,
-      [category, title, root_content, user_id]
+      [category, title, root_content, user_id, up_votes, down_votes]
     );
 
     if (rows.length === 0) {
@@ -152,7 +157,7 @@ app.post("/threads/create", async (req, res) => {
 // Route to create a new post to a thread
 app.post("/posts/create/:threadId", async (req, res) => {
   const { threadId } = req.params;
-  const { content, user_id } = req.body;
+  const { content, user_id, up_votes, down_votes } = req.body;
 
   if (!content || !user_id) {
     res.status(400).json("Content and user_id are required in the body");
@@ -172,10 +177,10 @@ app.post("/posts/create/:threadId", async (req, res) => {
     }
     // Insert the new post with the retrieved category_id
     const { rows } = await db_session.query(
-      `INSERT INTO posts (thread_id, content, user_id)
-             VALUES ($1, $2, $3)
+      `INSERT INTO posts (thread_id, content, user_id, up_votes, down_votes)
+             VALUES ($1, $2, $3, $4, $5)
              RETURNING *`,
-      [threadId, content, user_id]
+      [threadId, content, user_id, up_votes, down_votes]
     );
 
     if (rows.length === 0) {
