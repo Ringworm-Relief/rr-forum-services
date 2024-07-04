@@ -121,7 +121,8 @@ app.get("/threads/:category/:id", async (req, res) => {
 
 // Route to create a new post
 app.post("/threads/create", async (req, res) => {
-  const { title, root_content, user_id, category, up_votes, down_votes } = req.body; // Get other required fields from the request body
+  const { title, root_content, user_id, category, up_votes, down_votes } =
+    req.body; // Get other required fields from the request body
   // Validate the required fields
   if (!category || !title || !user_id || !root_content) {
     return res
@@ -147,7 +148,6 @@ app.post("/threads/create", async (req, res) => {
       return res.status(404).json({ message: "Category not found" });
     }
     res.status(201).json(rows);
-
   } catch (err) {
     console.error(err.message);
     res.status(500).send("Server error");
@@ -193,26 +193,56 @@ app.post("/posts/create/:threadId", async (req, res) => {
   }
 });
 
-app.delete("/threads/:id", async(req, res) => {
-    const { id } = req.params;
-    if (!id) {
-      res.status(400).json("ThreadId is a required parameter");
-    }
+app.delete("/threads/:id", async (req, res) => {
+  const { id } = req.params;
 
-    try {
-        const { rows } = await db_session.query("DELETE FROM threads WHERE id = $1 RETURNING *",
-            [id]
-        )
-        if (!rows.length) {
-            res.status(404).json({message: "Thread not found."})
-        } else {
-            res.status(200).json({ message: "Thread deleted successfully", thread: rows });
-        }
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send("Server error");
-      }
-})
+  if (!id) {
+    res.status(400).json("ThreadId is a required parameter");
+  }
+
+  try {
+    const { rows } = await db_session.query(
+      "DELETE FROM threads WHERE id = $1 RETURNING *",
+      [id]
+    );
+    if (!rows.length) {
+      res.status(404).json({ message: "Thread not found." });
+    } else {
+      res
+        .status(200)
+        .json({ message: "Thread deleted successfully", thread: rows });
+    }
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server error");
+  }
+});
+
+app.delete("/posts/:id", async (req, res) => {
+  const { id } = req.params;
+
+  if (!id) {
+    res.status(400).json("PostId is a required parameter");
+  }
+
+  try {
+    const { rows } = await db_session.query(
+      "DELETE FROM posts WHERE id = $1 RETURNING *",
+      [id]
+    );
+
+    if (!rows.length) {
+      res.status(404).json({ message: "Post not found." });
+    } else {
+      res
+        .status(200)
+        .json({ message: "Post deleted successfully", post: rows });
+    }
+  } catch {
+    console.error(err.message);
+    res.status(500).send("Server error");
+  }
+});
 
 // // Start the server
 app.listen(port, () => {
