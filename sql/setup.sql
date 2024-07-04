@@ -8,6 +8,8 @@ CREATE TABLE threads (
     category VARCHAR(100) NOT NULL,
     root_content TEXT DEFAULT '',
     user_id VARCHAR(50) NOT NULL,
+    up_votes INT DEFAULT 0,
+    down_votes INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -17,6 +19,8 @@ CREATE TABLE posts (
     thread_id INT NOT NULL,
     content TEXT DEFAULT '',
     user_id VARCHAR(50) NOT NULL,
+    up_votes INT DEFAULT 0,
+    down_votes INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (thread_id) REFERENCES threads(id) ON DELETE CASCADE
 );

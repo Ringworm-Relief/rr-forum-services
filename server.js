@@ -39,12 +39,16 @@ app.get("/threads/:category", async (req, res) => {
                 t.title AS title,
                 t.root_content AS root_content,
                 t.user_id AS user_id,
+                t.up_votes AS up_votes,
+                t.down_votes AS down_votes,
                 t.created_at AS created_at,
                 json_agg(json_build_object(
                     'id', p.id,
                     'thread_id', p.thread_id,
                     'post_content', p.content,
                     'user_id', p.user_id,
+                    'up_votes', p.up_votes,
+                    'down_votes', p.down_votes,
                     'created_at', p.created_at
                 )) AS posts
             FROM 
@@ -81,12 +85,16 @@ app.get("/threads/:category/:id", async (req, res) => {
                 t.title AS title,
                 t.root_content AS root_content,
                 t.user_id AS user_id,
+                t.up_votes AS up_votes,
+                t.down_votes AS down_votes,
                 t.created_at AS created_at,
                 json_agg(json_build_object(
                     'id', p.id,
                     'thread_id', p.thread_id,
                     'post_content', p.content,
                     'user_id', p.user_id,
+                    'up_votes', p.up_votes,
+                    'down_votes', p.down_votes,
                     'created_at', p.created_at
                 )) AS posts
             FROM 
