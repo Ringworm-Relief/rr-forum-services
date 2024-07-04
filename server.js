@@ -193,6 +193,27 @@ app.post("/posts/create/:threadId", async (req, res) => {
   }
 });
 
+app.delete("/threads/:id", async(req, res) => {
+    const { id } = req.params;
+    if (!id) {
+      res.status(400).json("ThreadId is a required parameter");
+    }
+
+    try {
+        const { rows } = await db_session.query("DELETE FROM threads WHERE id = $1 RETURNING *",
+            [id]
+        )
+        if (!rows.length) {
+            res.status(404).json({message: "Thread not found."})
+        } else {
+            res.status(200).json({ message: "Thread deleted successfully", thread: rows });
+        }
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send("Server error");
+      }
+})
+
 // // Start the server
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
