@@ -33,3 +33,6 @@ CREATE TABLE posts (
 CREATE INDEX user_id_idx ON posts(user_id);
 CREATE INDEX threads_category_idx ON threads(category);
 
+CREATE INDEX posts_thread_id_idx ON posts(thread_id);
+CREATE INDEX posts_thread_id_created_at_idx ON posts(thread_id, created_at);
+CREATE INDEX posts_created_at_idx ON posts(created_at);
