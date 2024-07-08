@@ -180,9 +180,9 @@ app.post("/threads/create", async (req, res) => {
 // Route to create a new post to a thread
 app.post("/posts/create/:threadId", async (req, res) => {
   const { threadId } = req.params;
-  const { content, user_id, up_votes, down_votes, first_name, last_name } = req.body;
+  const { post_content, user_id, up_votes, down_votes, first_name, last_name } = req.body;
 
-  if (!content || !user_id || !first_name || !last_name) {
+  if (!post_content || !user_id || !first_name || !last_name) {
     res.status(400).json("Content, first_name, last_name and user_id are required in the body");
   }
   if (!threadId) {
@@ -200,10 +200,10 @@ app.post("/posts/create/:threadId", async (req, res) => {
     }
     // Insert the new post with the retrieved category_id
     const { rows } = await db_session.query(
-      `INSERT INTO posts (thread_id, content, user_id, up_votes, down_votes, first_name, last_name)
+      `INSERT INTO posts (thread_id, post_content, user_id, up_votes, down_votes, first_name, last_name)
              VALUES ($1, $2, $3, $4, $5, $6, $7)
              RETURNING *`,
-      [threadId, content, user_id, up_votes, down_votes, first_name, last_name]
+      [threadId, post_content, user_id, up_votes, down_votes, first_name, last_name]
     );
 
     if (rows.length === 0) {
