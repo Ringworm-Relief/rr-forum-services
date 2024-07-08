@@ -54,14 +54,22 @@ app.get("/threads/:category", async (req, res) => {
                 t.title AS title,
                 t.root_content AS root_content,
                 t.user_id AS user_id,
+                t.first_name AS first_name,
+                t.last_name AS last_name,
+                t.up_votes AS up_votes,
+                t.down_votes AS down_votes,
                 t.created_at AS created_at,
-                json_agg(json_build_object(
+                COALESCE(json_agg(json_build_object(
                     'id', p.id,
                     'thread_id', p.thread_id,
                     'post_content', p.content,
                     'user_id', p.user_id,
+                    'first_name', p.first_name,
+                    'last_name', p.last_name,
+                    'up_votes', p.up_votes,
+                    'down_votes', p.down_votes,
                     'created_at', p.created_at
-                )) AS posts
+    )) FILTER (WHERE p.id IS NOT NULL), '[]')AS posts
             FROM 
                 threads t
             LEFT JOIN 
@@ -96,14 +104,22 @@ app.get("/threads/:category/:id", async (req, res) => {
                 t.title AS title,
                 t.root_content AS root_content,
                 t.user_id AS user_id,
+                t.first_name AS first_name,
+                t.last_name AS last_name,
+                t.up_votes AS up_votes,
+                t.down_votes AS down_votes,
                 t.created_at AS created_at,
-                json_agg(json_build_object(
+                COALESCE(json_agg(json_build_object(
                     'id', p.id,
                     'thread_id', p.thread_id,
                     'post_content', p.content,
                     'user_id', p.user_id,
+                    'first_name', p.first_name,
+                    'last_name', p.last_name,
+                    'up_votes', p.up_votes,
+                    'down_votes', p.down_votes,
                     'created_at', p.created_at
-                )) AS posts
+                )) FILTER (WHERE p.id IS NOT NULL), '[]')AS posts
             FROM 
                 threads t
             LEFT JOIN 
@@ -128,28 +144,33 @@ app.get("/threads/:category/:id", async (req, res) => {
 
 // Route to create a new post
 app.post("/threads/create", async (req, res) => {
-  const { title, root_content, user_id, category } = req.body; // Get other required fields from the request body
+  const { title, root_content, user_id, category, up_votes, down_votes, first_name, last_name } =
+    req.body; // Get other required fields from the request body
   // Validate the required fields
-  if (!category || !title || !user_id || !root_content) {
+  if (!category || !title || !user_id || !root_content || !first_name || !last_name) {
     return res
       .status(400)
-      .json({ message: "Category, title, content, and user_id are required." });
+      .json({ message: "Category, title, content, first_name, and last_name, and user_id are required." });
   }
 
   try {
     // Insert the new post with the retrieved category_id
     const { rows } = await db_session.query(
-      `INSERT INTO threads (category, title, root_content, user_id) 
-             VALUES ($1, $2, $3, $4) 
+      `INSERT INTO threads (category, title, root_content, user_id, up_votes, down_votes, first_name, last_name) 
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+             ON CONFLICT (category, title, user_id) 
+             DO UPDATE SET 
+               root_content = EXCLUDED.root_content,
+               up_votes = EXCLUDED.up_votes,
+               down_votes = EXCLUDED.down_votes
              RETURNING *`,
-      [category, title, root_content, user_id]
+      [category, title, root_content, user_id, up_votes, down_votes, first_name, last_name]
     );
 
     if (rows.length === 0) {
       return res.status(404).json({ message: "Category not found" });
     }
     res.status(201).json(rows);
-
   } catch (err) {
     console.error(err.message);
     res.status(500).send("Server error");
@@ -159,10 +180,10 @@ app.post("/threads/create", async (req, res) => {
 // Route to create a new post to a thread
 app.post("/posts/create/:threadId", async (req, res) => {
   const { threadId } = req.params;
-  const { content, user_id } = req.body;
+  const { content, user_id, up_votes, down_votes, first_name, last_name } = req.body;
 
-  if (!content || !user_id) {
-    res.status(400).json("Content and user_id are required in the body");
+  if (!content || !user_id || !first_name || !last_name) {
+    res.status(400).json("Content, first_name, last_name and user_id are required in the body");
   }
   if (!threadId) {
     res.status(400).json("ThreadId is a required parameter");
@@ -179,16 +200,67 @@ app.post("/posts/create/:threadId", async (req, res) => {
     }
     // Insert the new post with the retrieved category_id
     const { rows } = await db_session.query(
-      `INSERT INTO posts (thread_id, content, user_id)
-             VALUES ($1, $2, $3)
+      `INSERT INTO posts (thread_id, content, user_id, up_votes, down_votes, first_name, last_name)
+             VALUES ($1, $2, $3, $4, $5, $6, $7)
              RETURNING *`,
-      [threadId, content, user_id]
+      [threadId, content, user_id, up_votes, down_votes, first_name, last_name]
     );
 
     if (rows.length === 0) {
       return res.status(404).json({ message: "Thread not found" });
     }
     res.status(201).json(rows);
+  } catch {
+    console.error(err.message);
+    res.status(500).send("Server error");
+  }
+});
+
+app.delete("/threads/:id", async (req, res) => {
+  const { id } = req.params;
+
+  if (!id) {
+    res.status(400).json("ThreadId is a required parameter");
+  }
+
+  try {
+    const { rows } = await db_session.query(
+      "DELETE FROM threads WHERE id = $1 RETURNING *",
+      [id]
+    );
+    if (!rows.length) {
+      res.status(404).json({ message: "Thread not found." });
+    } else {
+      res
+        .status(200)
+        .json({ message: "Thread deleted successfully", thread: rows });
+    }
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server error");
+  }
+});
+
+app.delete("/posts/:id", async (req, res) => {
+  const { id } = req.params;
+
+  if (!id) {
+    res.status(400).json("PostId is a required parameter");
+  }
+
+  try {
+    const { rows } = await db_session.query(
+      "DELETE FROM posts WHERE id = $1 RETURNING *",
+      [id]
+    );
+
+    if (!rows.length) {
+      res.status(404).json({ message: "Post not found." });
+    } else {
+      res
+        .status(200)
+        .json({ message: "Post deleted successfully", post: rows });
+    }
   } catch {
     console.error(err.message);
     res.status(500).send("Server error");

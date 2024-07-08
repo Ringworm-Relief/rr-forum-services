@@ -8,7 +8,12 @@ CREATE TABLE threads (
     category VARCHAR(100) NOT NULL,
     root_content TEXT DEFAULT '',
     user_id VARCHAR(50) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
+    up_votes INT DEFAULT 0,
+    down_votes INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unique_category_title_user UNIQUE (category, title, user_id)
 );
 
 -- Create posts table
@@ -17,9 +22,17 @@ CREATE TABLE posts (
     thread_id INT NOT NULL,
     content TEXT DEFAULT '',
     user_id VARCHAR(50) NOT NULL,
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
+    up_votes INT DEFAULT 0,
+    down_votes INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (thread_id) REFERENCES threads(id) ON DELETE CASCADE
 );
 
 CREATE INDEX user_id_idx ON posts(user_id);
 CREATE INDEX threads_category_idx ON threads(category);
+
+CREATE INDEX posts_thread_id_idx ON posts(thread_id);
+CREATE INDEX posts_thread_id_created_at_idx ON posts(thread_id, created_at);
+CREATE INDEX posts_created_at_idx ON posts(created_at);
