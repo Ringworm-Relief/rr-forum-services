@@ -1,8 +1,11 @@
-DROP TABLE IF EXISTS threads;
+-- Drop the posts table first to remove the dependency on threads
 DROP TABLE IF EXISTS posts;
 
+-- Drop the threads table
+DROP TABLE IF EXISTS threads;
+
 -- Create threads table
-CREATE TABLE threads (
+CREATE TABLE IF NOT EXISTS threads (
     id SERIAL PRIMARY KEY,
     title VARCHAR(200) NOT NULL,
     category VARCHAR(100) NOT NULL,
@@ -17,7 +20,7 @@ CREATE TABLE threads (
 );
 
 -- Create posts table
-CREATE TABLE posts (
+CREATE TABLE IF NOT EXISTS posts (
     id SERIAL PRIMARY KEY,
     thread_id INT NOT NULL,
     content TEXT DEFAULT '',
@@ -30,9 +33,9 @@ CREATE TABLE posts (
     FOREIGN KEY (thread_id) REFERENCES threads(id) ON DELETE CASCADE
 );
 
-CREATE INDEX user_id_idx ON posts(user_id);
-CREATE INDEX threads_category_idx ON threads(category);
-
-CREATE INDEX posts_thread_id_idx ON posts(thread_id);
-CREATE INDEX posts_thread_id_created_at_idx ON posts(thread_id, created_at);
-CREATE INDEX posts_created_at_idx ON posts(created_at);
+-- Create indexes
+CREATE INDEX IF NOT EXISTS user_id_idx ON posts(user_id);
+CREATE INDEX IF NOT EXISTS threads_category_idx ON threads(category);
+CREATE INDEX IF NOT EXISTS posts_thread_id_idx ON posts(thread_id);
+CREATE INDEX IF NOT EXISTS posts_thread_id_created_at_idx ON posts(thread_id, created_at);
+CREATE INDEX IF NOT EXISTS posts_created_at_idx ON posts(created_at);
