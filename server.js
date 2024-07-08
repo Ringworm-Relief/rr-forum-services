@@ -35,7 +35,7 @@ db_session.connect()
 
 const corsOptions = {
   origin: [/^http:\/\/localhost:\d+$/, "https://rr-as.vercel.app/"],
-  methods: "GET,POST",
+  methods: "GET,POST,DELETE,PUT",
   allowedHeaders: "Content-Type,Authorization",
 };
 
