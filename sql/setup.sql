@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS threads (
 CREATE TABLE IF NOT EXISTS posts (
     id SERIAL PRIMARY KEY,
     thread_id INT NOT NULL,
-    post_content TEXT DEFAULT '',
+    content TEXT DEFAULT '',
     user_id VARCHAR(50) NOT NULL,
     first_name VARCHAR(50) NOT NULL,
     last_name VARCHAR(50) NOT NULL,
