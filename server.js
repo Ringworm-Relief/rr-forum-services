@@ -314,7 +314,7 @@ app.get("/threads/:category", async (req, res) => {
                 COALESCE(json_agg(json_build_object(
                     'id', p.id,
                     'thread_id', p.thread_id,
-                    'post_content', p.content,
+                    'content', p.content,
                     'user_id', p.user_id,
                     'first_name', p.first_name,
                     'last_name', p.last_name,
@@ -364,7 +364,7 @@ app.get("/threads/:category/:id", async (req, res) => {
                 COALESCE(json_agg(json_build_object(
                     'id', p.id,
                     'thread_id', p.thread_id,
-                    'post_content', p.content,
+                    'content', p.content,
                     'user_id', p.user_id,
                     'first_name', p.first_name,
                     'last_name', p.last_name,
