@@ -235,6 +235,8 @@ const cors = require("cors");
 const cheerio = require('cheerio');
 const fs = require('fs');
 const sharp = require('sharp');
+const path = require('path');
+
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -264,6 +266,12 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir);
+    console.log(`Created ${uploadsDir} directory`);
+}
+
 async function processEmbeddedImages(html) {
   const $ = cheerio.load(html);
   const promises = [];
@@ -278,7 +286,7 @@ async function processEmbeddedImages(html) {
       .resize(100, 100)
       .toBuffer()
       .then((resizedBuffer) => {
-        const filePath = `uploads/image_${Date.now()}_${index}.png`;
+        const filePath = path.join(uploadsDir, `image_${Date.now()}_${index}.png`);
         fs.writeFileSync(filePath, resizedBuffer)
           $(img).attr('src', filePath) // Update the src attribute with the new file path
       })
