@@ -288,7 +288,7 @@ async function processEmbeddedImages(html) {
       .then((resizedBuffer) => {
         const filePath = path.join(uploadsDir, `image_${Date.now()}_${index}.png`);
         fs.writeFileSync(filePath, resizedBuffer)
-          $(img).attr('src', filePath) // Update the src attribute with the new file path
+          $(img).attr('src', `/uploads/${path.basename(filePath)}`);  // Update the src attribute with the new file path
       })
       promises.push(promise)
     }
