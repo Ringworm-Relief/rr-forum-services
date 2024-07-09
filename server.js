@@ -414,7 +414,7 @@ app.post("/threads/create", async (req, res) => {
                up_votes = EXCLUDED.up_votes,
                down_votes = EXCLUDED.down_votes
              RETURNING *`,
-      [category, title, processedContent, root_content, user_id, up_votes, down_votes, first_name, last_name]
+      [category, title, processedContent, user_id, up_votes, down_votes, first_name, last_name]
     );
 
         if (rows.length === 0) {
