@@ -8,10 +8,12 @@
     "setup-db": "psql $DATABASE_URL -f setup.sql"
   },
   "dependencies": {
+    "cheerio": "^1.0.0-rc.12",
     "cors": "^2.8.5",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "node-pg-migrate": "^7.5.2",
-    "pg": "^8.12.0"
+    "pg": "^8.12.0",
+    "sharp": "^0.33.4"
   }
 }
