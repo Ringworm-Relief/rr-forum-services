@@ -426,6 +426,30 @@ app.post("/threads/create", async (req, res) => {
     }
 });
 
+// Endpoint for updating post votes
+app.put("/posts/:id/vote", async (req, res) => {
+  const { id } = req.params;
+  const { up_votes, down_votes } = req.body;
+
+  if (typeof up_votes !== 'number' || typeof down_votes !== 'number') {
+    return res.status(400).json("up_votes and down_votes are required and should be numbers");
+  }
+
+  try {
+    const { rows } = await db_session.query(
+      "UPDATE posts SET up_votes = $1, down_votes = $2 WHERE id = $3 RETURNING *",
+      [up_votes, down_votes, id]
+    );
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+    res.status(200).json(rows[0]);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server error");
+  }
+});
+
 // Route to create a new post to a thread
 app.post("/posts/create/:threadId", async (req, res) => {
     const { threadId } = req.params;
