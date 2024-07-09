@@ -401,6 +401,7 @@ app.post("/threads/create", async (req, res) => {
     }
 
   try {
+
     const processedContent = await processEmbeddedImages(root_content);
 
     // Insert the new post with the retrieved category_id
@@ -422,7 +423,7 @@ app.post("/threads/create", async (req, res) => {
         res.status(201).json(rows);
     } catch (err) {
         console.error(err.message);
-        res.status(500).send("Server error");
+        res.status(500).send(err.message);
     }
 });
 
