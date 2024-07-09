@@ -259,7 +259,7 @@ db_session.connect()
     .catch(err => console.error('Connection error', err.stack));
 
 const corsOptions = {
-    origin: [/^http:\/\/localhost:\d+$/, "https://rr-as.vercel.app/"],
+    origin: [/^http:\/\/localhost:\d+$/, "https://rr-as.vercel.app"],
     methods: "GET,POST,DELETE,PUT",
     allowedHeaders: "Content-Type,Authorization",
 };
