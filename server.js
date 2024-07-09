@@ -272,6 +272,9 @@ if (!fs.existsSync(uploadsDir)) {
     console.log(`Created ${uploadsDir} directory`);
 }
 
+// Serve static files from the uploads directory
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 async function processEmbeddedImages(html) {
   const $ = cheerio.load(html);
   const promises = [];
